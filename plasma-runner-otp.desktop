@@ -1,0 +1,16 @@
+[Desktop Entry]
+Name=OTP Generator
+Type=Service
+Icon=otp
+X-KDE-ServiceTypes=Plasma/Runner
+X-KDE-PluginInfo-Name=OTP Generator
+X-KDE-PluginInfo-Version=1.0
+X-KDE-PluginInfo-License=MIT
+X-KDE-PluginInfo-Author=beavailable
+X-KDE-PluginInfo-Email=beavailable@proton.me
+X-KDE-PluginInfo-EnabledByDefault=true
+X-Plasma-API=DBus
+X-Plasma-DBusRunner-Service=com.github.otp
+X-Plasma-DBusRunner-Path=/otp
+X-Plasma-Runner-Min-Letter-Count=5
+X-Plasma-Runner-Match-Regex=^otp
