@@ -10,7 +10,10 @@ Although it's a python plugin, it won't be running until you use it and will aut
 
 # Requirements
 ```bash
+# for Debian
 sudo apt install python3-gi
+# for Fedora
+sudo dnf install python3-gobject
 ```
 If you're not using Klipper, then you should also install one of the following packages:
 ```bash
