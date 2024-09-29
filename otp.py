@@ -208,23 +208,23 @@ class OTPService(DBusService):
         args = query.split()
         if args[0] != 'otp':
             return []
-        unknowk_result = [('', '- - - - - -', 'otp', 100, 1.0, {})]
+        unknown_result = [('', '- - - - - -', 'otp', 100, 1.0, {})]
         if len(args) == 2:
             try:
                 self.open_wallet()
             except RuntimeError:
-                return unknowk_result
+                return unknown_result
             key = self._wallet.read_password('OTP Keys', args[1])
             if key:
                 self._value = totp(key)
                 return [('copy', self._value, 'otp', 100, 1.0, {})]
             else:
-                return unknowk_result
+                return unknown_result
         if len(args) == 3:
             self._value = (args[1], args[2])
             return [('write', 'Press enter to store the key', 'otp', 100, 1.0, {})]
         else:
-            return unknowk_result
+            return unknown_result
 
     def Actions(self):
         return []
