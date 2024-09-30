@@ -68,16 +68,6 @@ def copy_text(text):
             process.terminate()
 
 
-def bus_name_available(name):
-    try:
-        proxy = Gio.DBusProxy.new_for_bus_sync(Gio.BusType.SESSION, Gio.DBusProxyFlags.DO_NOT_CONNECT_SIGNALS, None, 'org.freedesktop.DBus', '/org/freedesktop/DBus', 'org.freedesktop.DBus', None)
-        proxy.GetNameOwner('(s)', name)
-    except GLib.Error:
-        return True
-    else:
-        return False
-
-
 class KWallet:
 
     def __init__(self, app_id):
@@ -119,20 +109,17 @@ class DBusService:
         self._interface = Gio.DBusNodeInfo.new_for_xml(introspection_xml).interfaces[0]
         self._name = name
         self._objct_path = object_path
-        self._registration_id = None
         self._owner_id = None
         self._loop = GLib.MainLoop()
 
     def _on_bus_acquired(self, bus, name):
-        self._registration_id = bus.register_object(self._objct_path, self._interface, self._on_method_call)
+        bus.register_object(self._objct_path, self._interface, self._on_method_call)
 
     def _on_name_acquired(self, bus, name):
         pass
 
     def _on_name_lost(self, bus, name):
-        if self._registration_id:
-            bus.unregister_object(self._registration_id)
-            self._registration_id = None
+        self.quit()
 
     def _on_method_call(self, connection, sender, object_path, interface_name, method_name, parameters, invocation):
         func = getattr(self, method_name)
@@ -146,10 +133,7 @@ class DBusService:
         invocation.return_value(GLib.Variant(f'({outargs})', result))
 
     def run(self):
-        if not bus_name_available(self._name):
-            sys.exit(1)
-
-        self._owner_id = Gio.bus_own_name(Gio.BusType.SESSION, self._name, Gio.BusNameOwnerFlags.DO_NOT_QUEUE, self._on_bus_acquired, self._on_name_acquired, self._on_name_lost)
+        self._owner_id = Gio.bus_own_name(Gio.BusType.SESSION, self._name, Gio.BusNameOwnerFlags.ALLOW_REPLACEMENT | Gio.BusNameOwnerFlags.REPLACE, self._on_bus_acquired, self._on_name_acquired, self._on_name_lost)
         self._loop.run()
 
     def quit(self):
