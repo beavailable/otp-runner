@@ -103,23 +103,14 @@ class KWallet:
             self._handle = 0
 
 
-class DBusService:
+class OTPService(Gio.Application):
 
-    def __init__(self, introspection_xml, name, object_path):
-        self._interface = Gio.DBusNodeInfo.new_for_xml(introspection_xml).interfaces[0]
-        self._name = name
-        self._objct_path = object_path
-        self._owner_id = None
-        self._loop = GLib.MainLoop()
-
-    def _on_bus_acquired(self, bus, name):
-        bus.register_object(self._objct_path, self._interface, self._on_method_call)
-
-    def _on_name_acquired(self, bus, name):
-        pass
-
-    def _on_name_lost(self, bus, name):
-        self.quit()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs, flags=Gio.ApplicationFlags.ALLOW_REPLACEMENT | Gio.ApplicationFlags.REPLACE, inactivity_timeout=120 * 1000)
+        self._registration_id = None
+        self._wallet = KWallet(self.get_application_id())
+        self._wallet.open()
+        self._value = None
 
     def _on_method_call(self, connection, sender, object_path, interface_name, method_name, parameters, invocation):
         func = getattr(self, method_name)
@@ -132,20 +123,7 @@ class DBusService:
         outargs = ''.join(arg.signature for arg in invocation.get_method_info().out_args)
         invocation.return_value(GLib.Variant(f'({outargs})', result))
 
-    def run(self):
-        self._owner_id = Gio.bus_own_name(Gio.BusType.SESSION, self._name, Gio.BusNameOwnerFlags.ALLOW_REPLACEMENT | Gio.BusNameOwnerFlags.REPLACE, self._on_bus_acquired, self._on_name_acquired, self._on_name_lost)
-        self._loop.run()
-
-    def quit(self):
-        if self._owner_id:
-            Gio.bus_unown_name(self._owner_id)
-            self._owner_id = None
-            self._loop.quit()
-
-
-class OTPService(DBusService):
-
-    def __init__(self, name):
+    def do_dbus_register(self, connection, object_path):
         introspection_xml = '''
             <node>
                 <interface name="org.kde.krunner1">
@@ -163,41 +141,32 @@ class OTPService(DBusService):
                 </interface>
             </node>
         '''
-        super().__init__(introspection_xml, name, '/otp')
-        self._wallet = None
-        self._value = None
-        self._source_id = 0
+        interface_info = Gio.DBusNodeInfo.new_for_xml(introspection_xml).interfaces[0]
+        self._registration_id = connection.register_object('/otp', interface_info, self._on_method_call)
+        return True
 
-    def open_wallet(self):
-        if not self._wallet:
-            self._wallet = KWallet(self._name)
-            self._wallet.open()
+    def do_dbus_unregister(self, connection, object_path):
+        if self._registration_id:
+            connection.unregister_object(self._registration_id)
 
-    def on_timeout(self, data):
-        self.quit()
-        self._source_id = 0
-        return False
+    def do_activate(self):
+        self.hold()
+        self.release()
 
-    def quit(self):
-        super().quit()
-        if self._wallet:
-            self._wallet.close()
-            self._wallet = None
+    # The following methods don't work well, so they're commented.
+    #  def do_name_lost(self):
+    #      self._wallet.close()
+    #
+    #  def do_shutdown(self):
+    #      self._wallet.close()
 
     def Match(self, query):
-        if self._source_id > 0:
-            GLib.source_remove(self._source_id)
-        self._source_id = GLib.timeout_add_seconds(120, self.on_timeout, None)
-
+        self.do_activate()
         args = query.split()
         if args[0] != 'otp':
             return []
         unknown_result = [('', '- - - - - -', 'otp', 100, 1.0, {})]
         if len(args) == 2:
-            try:
-                self.open_wallet()
-            except RuntimeError:
-                return unknown_result
             key = self._wallet.read_password('OTP Keys', args[1])
             if key:
                 self._value = totp(key)
@@ -217,19 +186,14 @@ class OTPService(DBusService):
         if match_id == 'copy':
             copy_text(self._value)
         elif match_id == 'write':
-            try:
-                self.open_wallet()
-            except RuntimeError:
-                pass
-            else:
-                self._wallet.create_folder('OTP Keys')
-                self._wallet.write_password('OTP Keys', self._value[0], self._value[1])
+            self._wallet.create_folder('OTP Keys')
+            self._wallet.write_password('OTP Keys', self._value[0], self._value[1])
 
 
 def main():
     if len(sys.argv) == 1:
-        service = OTPService('com.github.otp')
-        service.run()
+        service = OTPService(application_id='com.github.otp')
+        sys.exit(service.run())
     elif len(sys.argv) == 2:
         with KWallet('com.github.otp') as wallet:
             key = wallet.read_password('OTP Keys', sys.argv[1])
