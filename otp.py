@@ -153,7 +153,7 @@ class OTPService(Gio.Application):
         self.hold()
         self.release()
 
-    # The following methods don't work well, so they're commented.
+    # The following methods don't work well on my system, so they're commented out.
     #  def do_name_lost(self):
     #      self._wallet.close()
     #
