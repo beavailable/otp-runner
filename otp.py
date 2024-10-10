@@ -143,9 +143,10 @@ class OTPService(Gio.Application):
         '''
         interface_info = Gio.DBusNodeInfo.new_for_xml(introspection_xml).interfaces[0]
         self._registration_id = connection.register_object('/otp', interface_info, self._on_method_call)
-        return True
+        return Gio.Application.do_dbus_register(self, connection, object_path)
 
     def do_dbus_unregister(self, connection, object_path):
+        Gio.Application.do_dbus_unregister(self, connection, object_path)
         if self._registration_id:
             connection.unregister_object(self._registration_id)
 
