@@ -103,7 +103,7 @@ class KWallet:
             self._handle = 0
 
 
-class OTPService(Gio.Application):
+class OTPApplication(Gio.Application):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs, flags=Gio.ApplicationFlags.ALLOW_REPLACEMENT | Gio.ApplicationFlags.REPLACE, inactivity_timeout=120 * 1000)
@@ -190,8 +190,8 @@ class OTPService(Gio.Application):
 
 def main():
     if len(sys.argv) == 1:
-        service = OTPService(application_id='com.github.otp')
-        sys.exit(service.run())
+        app = OTPApplication(application_id='com.github.otp')
+        sys.exit(app.run())
     elif len(sys.argv) == 2:
         with KWallet('com.github.otp') as wallet:
             key = wallet.read_password('OTP Keys', sys.argv[1])
