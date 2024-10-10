@@ -123,6 +123,29 @@ class OTPApplication(Gio.Application):
         outargs = ''.join(arg.signature for arg in invocation.get_method_info().out_args)
         invocation.return_value(GLib.Variant(f'({outargs})', result))
 
+    def _read_otp_key(self, name):
+        return self._wallet.read_password('OTP Keys', name)
+
+    def _write_otp_key(self, name, key):
+        self._wallet.create_folder('OTP Keys')
+        self._wallet.write_password('OTP Keys', name, key)
+
+    def do_local_command_line(self, arguments):
+        if len(arguments) == 1:
+            return Gio.Application.do_local_command_line(self, arguments)
+        elif len(arguments) == 2:
+            key = self._read_otp_key(arguments[1])
+            if key:
+                print(totp(key))
+                return (True, [], 0)
+            else:
+                return (True, [], 1)
+        elif len(arguments) == 3:
+            self._write_otp_key(arguments[1], arguments[2])
+            return (True, [], 0)
+        else:
+            return (True, [], 1)
+
     def do_dbus_register(self, connection, object_path):
         introspection_xml = '''
             <node>
@@ -165,7 +188,7 @@ class OTPApplication(Gio.Application):
             return []
         unknown_result = [('', '- - - - - -', 'otp', 100, 1.0, {})]
         if len(args) == 2:
-            key = self._wallet.read_password('OTP Keys', args[1])
+            key = self._read_otp_key(args[1])
             if key:
                 self._value = totp(key)
                 return [('copy', self._value, 'otp', 100, 1.0, {})]
@@ -184,27 +207,12 @@ class OTPApplication(Gio.Application):
         if match_id == 'copy':
             copy_text(self._value)
         elif match_id == 'write':
-            self._wallet.create_folder('OTP Keys')
-            self._wallet.write_password('OTP Keys', self._value[0], self._value[1])
+            self._write_otp_key(*self._value)
 
 
 def main():
-    if len(sys.argv) == 1:
-        app = OTPApplication(application_id='com.github.otp')
-        sys.exit(app.run())
-    elif len(sys.argv) == 2:
-        with KWallet('com.github.otp') as wallet:
-            key = wallet.read_password('OTP Keys', sys.argv[1])
-            if key:
-                print(totp(key))
-            else:
-                sys.exit(1)
-    elif len(sys.argv) == 3:
-        with KWallet('com.github.otp') as wallet:
-            wallet.create_folder('OTP Keys')
-            wallet.write_password('OTP Keys', sys.argv[1], sys.argv[2])
-    else:
-        sys.exit(1)
+    app = OTPApplication(application_id='com.github.otp')
+    sys.exit(app.run(sys.argv))
 
 
 main()
