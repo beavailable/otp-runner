@@ -75,13 +75,6 @@ class KWallet:
         self._app_id = app_id
         self._handle = 0
 
-    def __enter__(self):
-        self.open()
-        return self
-
-    def __exit__(self, *exc):
-        self.close()
-
     def open(self):
         if self._handle <= 0:
             self._handle = self._proxy.open('(sxs)', 'kdewallet', 0, self._app_id)
