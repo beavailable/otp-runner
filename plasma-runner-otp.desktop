@@ -14,3 +14,4 @@ X-Plasma-DBusRunner-Service=com.github.otp
 X-Plasma-DBusRunner-Path=/otp
 X-Plasma-Runner-Min-Letter-Count=5
 X-Plasma-Runner-Match-Regex=^otp
+X-Plasma-Request-Actions-Once=true
