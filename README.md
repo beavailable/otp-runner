@@ -5,6 +5,9 @@ OTP secrets are stored in KWallet under the default wallet which is "kdewallet" 
 
 Although it's a python plugin, it won't be running until you use it and will automatically exit after two minutes of inactivity, so don't worry about the memory usage.
 
+**Note**:  
+The `main` branch will drop Plasma 5 support at some point in the future, if you're still using Plasma 5, please go to branch [plasma-5](https://github.com/beavailable/otp-runner/tree/plasma-5).
+
 # Screenshot
 ![img](https://github.com/beavailable/otp-runner/blob/main/screenshot.gif)
 
