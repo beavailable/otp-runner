@@ -28,6 +28,8 @@ xclip
 
 # Installation
 ```bash
+git clone https://github.com/beavailable/otp-runner
+cd otp-runner/
 ./install.sh
 ```
 After the installation, you'll get a KRunner plugin and an `otp` command for you to use in terminal.
