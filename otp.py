@@ -71,7 +71,7 @@ def copy_text(text):
 class KWallet:
 
     def __init__(self, app_id):
-        self._proxy = Gio.DBusProxy.new_for_bus_sync(Gio.BusType.SESSION, Gio.DBusProxyFlags.DO_NOT_CONNECT_SIGNALS, None, 'org.kde.kwalletd5', '/modules/kwalletd5', 'org.kde.KWallet', None)
+        self._proxy = Gio.DBusProxy.new_for_bus_sync(Gio.BusType.SESSION, Gio.DBusProxyFlags.DO_NOT_CONNECT_SIGNALS, None, 'org.kde.kwalletd6', '/modules/kwalletd6', 'org.kde.KWallet', None)
         self._app_id = app_id
         self._handle = 0
 

@@ -17,4 +17,4 @@ mkdir -p ~/.local/share/dbus-1/services
     echo "Exec=$HOME/.local/bin/otp"
 } >~/.local/share/dbus-1/services/com.github.otp.service
 
-pgrep -x krunner >/dev/null && kquitapp5 krunner || true
+pgrep -x krunner >/dev/null && kquitapp6 krunner || true
