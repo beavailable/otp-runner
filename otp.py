@@ -54,13 +54,23 @@ def totp(key):
 
 def copy_text(text):
     try:
-        proxy = Gio.DBusProxy.new_for_bus_sync(Gio.BusType.SESSION, Gio.DBusProxyFlags.DO_NOT_CONNECT_SIGNALS, None, 'org.kde.klipper', '/klipper', 'org.kde.klipper.klipper', None)
+        proxy = Gio.DBusProxy.new_for_bus_sync(
+            Gio.BusType.SESSION,
+            Gio.DBusProxyFlags.DO_NOT_CONNECT_SIGNALS,
+            None,
+            'org.kde.klipper',
+            '/klipper',
+            'org.kde.klipper.klipper',
+            None,
+        )
         proxy.setClipboardContents('(s)', text)
     except GLib.Error:
         if shutil.which('wl-copy'):
             subprocess.run(['wl-copy', text])
         elif shutil.which('xclip'):
-            process = subprocess.Popen(['xclip', '-selection', 'clipboard'], stdin=subprocess.PIPE, text=True)
+            process = subprocess.Popen(
+                ['xclip', '-selection', 'clipboard'], stdin=subprocess.PIPE, text=True
+            )
             try:
                 process.communicate(input=text, timeout=10)
             except subprocess.TimeoutExpired:
@@ -71,7 +81,15 @@ def copy_text(text):
 class KWallet:
 
     def __init__(self, app_id):
-        self._proxy = Gio.DBusProxy.new_for_bus_sync(Gio.BusType.SESSION, Gio.DBusProxyFlags.DO_NOT_CONNECT_SIGNALS, None, 'org.kde.kwalletd6', '/modules/kwalletd6', 'org.kde.KWallet', None)
+        self._proxy = Gio.DBusProxy.new_for_bus_sync(
+            Gio.BusType.SESSION,
+            Gio.DBusProxyFlags.DO_NOT_CONNECT_SIGNALS,
+            None,
+            'org.kde.kwalletd6',
+            '/modules/kwalletd6',
+            'org.kde.KWallet',
+            None,
+        )
         self._app_id = app_id
         self._handle = 0
 
@@ -85,7 +103,10 @@ class KWallet:
         return self._proxy.readPassword('(isss)', self._handle, folder, key, self._app_id)
 
     def write_password(self, folder, key, value):
-        return self._proxy.writePassword('(issss)', self._handle, folder, key, value, self._app_id) == 0
+        return (
+            self._proxy.writePassword('(issss)', self._handle, folder, key, value, self._app_id)
+            == 0
+        )
 
     def create_folder(self, folder):
         return self._proxy.createFolder('(iss)', self._handle, folder, self._app_id)
@@ -99,13 +120,19 @@ class KWallet:
 class OTPApplication(Gio.Application):
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs, flags=Gio.ApplicationFlags.ALLOW_REPLACEMENT | Gio.ApplicationFlags.REPLACE, inactivity_timeout=120 * 1000)
+        super().__init__(
+            **kwargs,
+            flags=Gio.ApplicationFlags.ALLOW_REPLACEMENT | Gio.ApplicationFlags.REPLACE,
+            inactivity_timeout=120 * 1000,
+        )
         self._registration_id = None
         self._wallet = KWallet(self.get_application_id())
         self._wallet.open()
         self._value = None
 
-    def _on_method_call(self, connection, sender, object_path, interface_name, method_name, parameters, invocation):
+    def _on_method_call(
+        self, connection, sender, object_path, interface_name, method_name, parameters, invocation
+    ):
         func = getattr(self, method_name)
         args = parameters.unpack()
         result = func(*args)
@@ -158,7 +185,9 @@ class OTPApplication(Gio.Application):
             </node>
         '''
         interface_info = Gio.DBusNodeInfo.new_for_xml(introspection_xml).interfaces[0]
-        self._registration_id = connection.register_object('/otp', interface_info, self._on_method_call)
+        self._registration_id = connection.register_object(
+            '/otp', interface_info, self._on_method_call
+        )
         return Gio.Application.do_dbus_register(self, connection, object_path)
 
     def do_dbus_unregister(self, connection, object_path):
