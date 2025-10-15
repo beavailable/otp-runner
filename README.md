@@ -8,10 +8,10 @@ Although it's a python plugin, it won't be running until you use it and will aut
 **Note**:  
 The `main` branch doesn't support Plasma 5 anymore, if you're still using Plasma 5, please go to branch [plasma-5](https://github.com/beavailable/otp-runner/tree/plasma-5).
 
-# Screenshot
+## Screenshot
 ![img](https://github.com/beavailable/otp-runner/blob/main/screenshot.gif)
 
-# Requirements
+## Requirements
 ```bash
 # for Debian
 sudo apt install python3-gi
@@ -26,7 +26,7 @@ wl-clipboard
 xclip
 ```
 
-# Installation
+## Installation
 ```bash
 git clone https://github.com/beavailable/otp-runner
 cd otp-runner/
@@ -34,12 +34,12 @@ cd otp-runner/
 ```
 After the installation, you'll get a KRunner plugin and an `otp` command for you to use in terminal.
 
-# Uninstallation
+## Uninstallation
 ```bash
 ./uninstall.sh
 ```
 
-# Acknowledgments
+## Acknowledgments
 This project makes use of code and resources from the following sources:
 - **Code**:
     - [mintotp](https://github.com/susam/mintotp) by Susam Pal. Licensed under the MIT License.
